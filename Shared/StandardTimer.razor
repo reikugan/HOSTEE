@@ -1,19 +1,31 @@
-﻿<h3>Standard Timer</h3>
+﻿
 
-<div class="timer-container" style="width: 300px; height: 120px; display: flex; flex-direction: column; justify-content: center;">
-    <p class="p-time">@time</p>
-    <div class="row" style="margin:5px; display: flex; justify-content: center; gap: 25px;">
-        <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" Disabled ="@timerOn" @ref="btnStart" OnClick="StartTimer">Start</SfButton>
-        </div>
-        <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" Disabled="!timerOn" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
-        </div>
-        <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" @ref="btnReset" OnClick="ResetTimer">Reset</SfButton>
+<div class="timer-container" style="width: 300px; height: 150px; display: flex; flex-direction: column; justify-content: center;">
+    <div class="row" style="height: 25%;">
+        <div class="col" style="padding: 0px; margin: 0px;">
+            <p style="float: left; font-size: 12px; color: white">Standard Timer</p>
         </div>
     </div>
+    <div class="row">
+        <p class="p-time">@time</p>
+    </div>
+    <div class="row" style="width: 100%; margin: 2px; display: flex; justify-content: center; gap: 1px;">
+        <div class="col" style="padding: 0;">
+            <SfButton style="width: 100%; height: 100%; background-color: #5b5a5a" Disabled="@timerOn" @ref="btnStart" OnClick="StartTimer">Start</SfButton>
+        </div>
+        <div class="col" style="padding: 0;">
+            <SfButton style="width: 100%; height: 100%; background-color: #5b5a5a" Disabled="!timerOn" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
+        </div>
+        <div class="col" style="padding: 0;">
+            <SfButton style="width: 100%; height: 100%; background-color: #5b5a5a" @ref="btnReset" OnClick="ResetTimer">Reset</SfButton>
+        </div>
+    </div>
+    <div class="row" style="height: 20%; display: flex; justify-content: center;">
+        <SfButton style="width: 90%; background-color: #691515; font-size: 12px;" OnClick="DeleteTimer">Delete</SfButton>
+    </div>
 </div>
+
+
 
 @code {
     SfButton btnStart;
@@ -55,10 +67,14 @@
     {
         if (timerOn == true) return;
 
-            StopTimer();
-            time = "00:00:00";
-            secspassed = 0;
-            StateHasChanged();
+        StopTimer();
+        time = "00:00:00";
+        secspassed = 0;
+        StateHasChanged();
+    }
+
+    private void DeleteTimer(){
+        this.Dispose();
     }
 
         public void Dispose()

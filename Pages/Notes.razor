@@ -5,7 +5,21 @@
 
 
 <h3>Your Notes</h3>
-<SfButton @OnClick="CreateNote">New note</SfButton>
+<div class="note-container">
+    <div class="row" style>
+        <p style="color: white">Title:*</p>
+        <InputText @bind-Value="notetitle"></InputText>
+    </div>
+    <div class="row">
+        <p style="color: white">Content:*</p>
+    </div>
+    <div class="row">
+        <InputText @bind-Value="notecontent"></InputText>
+    </div>
+</div>
+
+
+<SfButton @onclick="CreateNote">New note</SfButton>
 
 <ul>
     @foreach (var note in notes)
@@ -35,6 +49,10 @@
 
     private async Task CreateNote()
     {
+        if (string.IsNullOrEmpty(notetitle) || string.IsNullOrEmpty(notecontent)){ 
+            return;
+        }
+
         var logstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var userId = logstate.User.Identity.Name;
 
