@@ -1,0 +1,59 @@
+﻿@using HOSTEE.Services
+@page "/notes"
+@inject INotesService NotesService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<h3>Your Notes</h3>
+<SfButton @OnClick="CreateNote">New note</SfButton>
+
+<ul>
+    @foreach (var note in notes)
+    {
+        <li>
+            <h5>@note.Title</h5>
+            <p>@note.Content</p>
+            <button @onclick="() => DeleteNote(note.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+@code {
+    private List<Note> notes = new();
+    private string notetitle { get; set; }
+    private string notecontent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var logstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = logstate.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            notes = await NotesService.GetNotesAsync(user.Identity.Name);
+        }
+    }
+
+    private async Task CreateNote()
+    {
+        var logstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = logstate.User.Identity.Name;
+
+        await NotesService.AddNoteAsync(new Note { Title = notetitle, Content = notecontent, UserId = userId });
+        notes = await NotesService.GetNotesAsync(userId);
+    }
+
+    private async Task DeleteNote(int id)
+    {
+        await NotesService.DeleteNoteAsync(id);
+        notes = await NotesService.GetNotesAsync(await GetUserId());
+
+    }
+
+    private async Task<string> GetUserId()
+    {
+        var logstate = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return logstate.User.Identity.Name;
+    }
+
+
+}

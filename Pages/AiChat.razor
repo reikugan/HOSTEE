@@ -1,0 +1,70 @@
+﻿@using HOSTEE.Models
+@using HOSTEE.Services
+@page "/aichatbot"
+@inject ChatBotService ChatBotService
+
+<h3>Chat with Bot</h3>
+
+<div class="chat-container">
+    <div class="chat-messages">
+        @foreach (var message in messages)
+        {
+            <p>@message</p>
+        }
+    </div>
+    <input @bind="userMessage" placeholder="Type a message" @onkeydown="HandleKeyPress" />
+    <button @onclick="SendMessage">Send</button>
+</div>
+
+@code {
+    private string userMessage = "";
+    private List<string> messages = new List<string>();
+    private List<Message> _conversation = new();
+    private bool sending;
+
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrEmpty(userMessage))
+        {
+            /*
+            messages.Add("You: " + userMessage);
+            var response = await ChatBotService.CreateChatCompletion(userMessage);
+            messages.Add("Bot: " + response);
+            userMessage = "";
+            */
+            _conversation.Add(new Message { role = "user", content = userMessage });
+            StateHasChanged();
+            await CreateCompletion();
+            ClearInput();
+            StateHasChanged();
+        }
+    }
+
+    private void ClearInput(){
+        userMessage = String.Empty;
+    }
+
+    private void ClearConversation(){
+        ClearInput();
+        _conversation.Clear();
+    }
+
+    private async Task CreateCompletion()
+    {
+        sending = true;
+        var assistantResponse = await ChatBotService.CreateChatCompletion(_conversation);
+        _conversation.Add(assistantResponse);
+        sending = false;
+    }
+
+
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+}
+

@@ -1,0 +1,101 @@
+﻿<h3>Countdown Timer</h3>
+
+<div class="timer-container" style="width: 300px; height: 150px; display: flex; flex-direction: column; justify-content: center;">
+    <!--ROW 1-->
+    <div class="row">
+        <p class="p-time">@time</p>
+    </div>
+    <!--ROW 2-->
+    <div class="row">
+        <div class="col" style="padding-right: 5px; padding-left: 5px;">
+            <label for="hours" style="font-size: 15px; color: #1d88ea">Hours:</label>
+            <SfNumericTextBox TValue="int?" @bind-Value="hours" Min="0" Max="99" Step="1"></SfNumericTextBox>
+        </div>
+        <div class="col" style="padding-right: 5px; padding-left: 5px;">
+            <label for="hours" style="font-size: 15px; color: #1d88ea">Minutes:</label>
+            <SfNumericTextBox TValue="int?" @bind-Value="mins" Min="0" Max="59" Step="1"></SfNumericTextBox>
+        </div>
+        <div class="col" style="padding-right: 5px; padding-left: 5px;">
+            <label for="hours" style="font-size: 15px; color: #1d88ea">Seconds:</label>
+            <SfNumericTextBox TValue="int?" @bind-Value="secs" Min="0" Max="59" Step="1"></SfNumericTextBox>
+        </div>
+    </div>
+    <!--ROW 3-->
+    <div class="row" style="margin:5px; display: flex; justify-content: center; gap: 25px;">
+        <div class="col" style="padding: 0;">
+            <SfButton CSSClass="btn-timers" Disabled="@timerOn" @ref="btnStart" OnClick="Start">Start</SfButton>
+        </div>
+        <div class="col" style="padding: 0;">
+            <SfButton CSSClass="btn-timers" Disabled="!timerOn" @ref="btnPause" OnClick="Pause">Pause</SfButton>
+        </div>
+        <div class="col" style="padding: 0;">
+            <SfButton CSSClass="btn-timers" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    SfButton btnStart;
+    SfButton btnPause;
+    SfButton btnStop;
+    private int? secs = 0;
+    private int? mins = 0;
+    private int? hours = 0;
+    int totalSeconds;
+
+    private string time = "00:00:00";
+    private bool timerOn = false;
+    private System.Timers.Timer? timer;
+
+    private async Task Start(){
+        totalSeconds = (hours ?? 0) * 3600 + (mins ?? 0) * 60 + (secs ?? 0);
+        if (totalSeconds <= 0) return;
+
+        //totalSeconds = (hours ?? 0) * 3600 + (mins ?? 0) * 60 + (secs ?? 0);
+        time = TimeSpan.FromSeconds(totalSeconds).ToString(@"hh\:mm\:ss");
+
+        timer = new Timer(1000);
+        timer.Elapsed += TimerElapsed;
+        timer.Start();
+        timerOn = true;
+    }
+
+    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        totalSeconds--;
+        if (totalSeconds <= 0){
+            timer.Stop();
+            timerOn = false;
+        }
+        time = TimeSpan.FromSeconds(totalSeconds).ToString(@"hh\:mm\:ss");
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Pause(){
+        if (timer == null) return;
+        timer.Stop();
+        timerOn = false;
+        if(totalSeconds < 60){
+            secs = totalSeconds;
+        }
+        else if (totalSeconds < 3600){
+            mins = totalSeconds / 60;
+            secs = totalSeconds - (mins * 60);
+        } else {
+            hours = totalSeconds / 3600;
+            mins = (totalSeconds - (hours * 3600)) / 60;
+            secs = totalSeconds - (hours * 3600) - (mins * 60);
+        }
+    }
+
+    private void StopTimer()
+    {
+        if (timer == null) return;
+        timer.Stop();
+        secs = 0;
+        mins = 0;
+        hours = 0;
+        time = "00:00:00";
+        StateHasChanged();
+    }
+}
