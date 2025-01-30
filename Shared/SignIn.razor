@@ -1,0 +1,48 @@
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@inject SignInManager<ApplicationUser> sinManager
+@inject NavigationManager navigator
+
+<EditForm Model="@signInModel" OnValidSubmit="Sign">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="Email">Email</label>
+        <InputText id="Email" @bind-Value="signInModel.Email" />
+    </div>
+    <div>
+        <label for="Password">Password</label>
+        <InputText id="Password" @bind-Value="signInModel.Password" type="password" />
+    </div>
+    <div>
+        <label for="RememberMe">Remember Me</label>
+        <InputCheckbox id="RememberMe" @bind-Value="signInModel.Remember"/>
+    </div>
+
+    <button type="submit">Sign In</button>
+</EditForm>
+
+@code {
+    private SignInModel signInModel = new SignInModel();
+
+    private async Task Sign()
+    {
+        //if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password)) return;
+
+        var result = await sinManager.PasswordSignInAsync(signInModel.Email, signInModel.Password, false, false);
+
+
+        if(result.Succeeded){
+
+            await Task.Delay(100);
+            navigator.NavigateTo("/index", forceLoad: true);
+        }
+    }
+
+    private void RegDirect() 
+    {
+        navigator.NavigateTo("/register", forceLoad: true);
+    }
+
+}

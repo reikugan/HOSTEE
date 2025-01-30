@@ -1,5 +1,4 @@
-﻿<h3>Countdown Timer</h3>
-
+﻿
 <div class="timer-container" style="width: 300px; height: 150px; display: flex; flex-direction: column; justify-content: center;">
     <!--ROW 1-->
     <div class="row">
@@ -21,23 +20,29 @@
         </div>
     </div>
     <!--ROW 3-->
-    <div class="row" style="margin:5px; display: flex; justify-content: center; gap: 25px;">
+    <div class="row" style="margin: 5px 0px; display: flex; justify-content: center; gap: 7px;">
         <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" Disabled="@timerOn" @ref="btnStart" OnClick="Start">Start</SfButton>
+            <SfButton style="background-color: #0dc645; width: 100%" Disabled="@timerOn" @ref="btnStart" OnClick="Start">Start</SfButton>
         </div>
         <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" Disabled="!timerOn" @ref="btnPause" OnClick="Pause">Pause</SfButton>
+            <SfButton style="width: 100%" Disabled="!timerOn" @ref="btnPause" OnClick="Pause">Pause</SfButton>
         </div>
         <div class="col" style="padding: 0;">
-            <SfButton CSSClass="btn-timers" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
+            <SfButton style="width: 100%" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
+        </div>
+        <div class="col" style="padding: 0;">
+            <SfButton style="background-color: #691515; width: 100%" @ref="btnDel" OnClick="DeleteTimer">Delete</SfButton>
         </div>
     </div>
 </div>
 
 @code {
+    [Parameter] public Guid TimerId { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
     SfButton btnStart;
     SfButton btnPause;
     SfButton btnStop;
+    SfButton btnDel;
     private int? secs = 0;
     private int? mins = 0;
     private int? hours = 0;
@@ -97,5 +102,10 @@
         hours = 0;
         time = "00:00:00";
         StateHasChanged();
+    }
+
+    private async void DeleteTimer()
+    {
+        await OnDelete.InvokeAsync(TimerId);
     }
 }

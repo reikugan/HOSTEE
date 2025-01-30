@@ -3,56 +3,92 @@
 <PageTitle>Timers</PageTitle>
 
 <h1>Your Timers</h1>
+<div style="width: 350px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px;">
+    <div style="flex: 1">
+        <SfButton style="width: 160px; height: 50px; border-color: green; border-radius: 10px 30px;" @onclick="AddStandardTimer">Add Standard timer</SfButton>
+    </div>
+    <div style="flex: 1">
+        <SfButton style="width: 160px; height: 50px; border-color: green; border-radius: 10px 30px;" @onclick="AddCountDownTimer">Add Countdown timer</SfButton>
+    </div>
+    <div style="flex: 1">
+        <SfButton style="width: 160px; height: 50px; border-color: green; border-radius: 10px 30px; background-color: #691515;" @onclick="ClearBoard">Clear all</SfButton>
+    </div>
+</div>
+
 
 <div class="timer-table">
-    <div class="row" style="border-radius: 10px;">
-
-        <div class="col" style="align-content:flex-end">
-            <SfButton CssClass="btn-add-timer" @onclick="AddStandardTimer">Add Standard timer</SfButton>
-
-        </div>
-        <div class="col" style="align-content:flex-start">
-            <SfButton CssClass="btn-add-timer" @onclick="AddCountDownTimer">Add Countdown timer</SfButton>
-
-        </div>
-
-
-    </div>
+    @foreach (var timerId in activeStntimers)
+    {
+        <StandardTimer TimerId="@timerId" OnDelete="RemoveStnTimer" />
+    }
+    @foreach (var tid in activeCdtimers){
+        <CoDownTimer TimerId="@tid" OnDelete="RemoveCdTimer" />
+    }
 </div>
 
 
-
+<!--
 <div class="row">
 
-    <div class="col">
-        <StandardTimer />
-    </div>
-    <div class="col">
-        <StandardTimer />
-    </div>
-    <div class="col">
-        <StandardTimer />
-    </div>
+<div class="col">
+<StandardTimer />
+</div>
+<div class="col">
+<StandardTimer />
+</div>
+<div class="col">
+<StandardTimer />
+</div>
 
 </div>
 <div class="row">
 
-    <div class="col">
-        <CoDownTimer />
-    </div>
+<div class="col">
+<CoDownTimer />
+</div>
 
-    <div class="col">
-        <GPTcountdown />
-    </div>
+<div class="col">
+<CoDownTimer />
+</div>
 
 </div>
+-->
+
 
 @code{
-    private void AddCountDownTimer(){
+    private List<Guid> activeStntimers = new();
+    private List<Guid> activeCdtimers = new();
+
+
+    private void AddCountDownTimer()
+    {
+        if (activeCdtimers.Count < 6)
+        {
+            activeCdtimers.Add(Guid.NewGuid());
+        }
+    }
+
+    private void AddStandardTimer()
+    {
+        if (activeStntimers.Count < 6)
+        {
+            activeStntimers.Add(Guid.NewGuid());
+        }
 
     }
 
-    private void AddStandardTimer(){
+    private void RemoveStnTimer(Guid t)
+    {
+        activeStntimers.Remove(t);
+    }
+    private void RemoveCdTimer(Guid t)
+    {
+        activeCdtimers.Remove(t);
+    }
 
+    private void ClearBoard()
+    {
+        activeStntimers.Clear();
+        activeCdtimers.Clear();
     }
 }

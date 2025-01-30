@@ -1,18 +1,49 @@
-﻿@page "/"
+﻿@using System.Security.Claims;
+@page "/"
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
-<PageTitle>HOSTEE</PageTitle>
 
-<div class="row">
-    <div class="col  text-center">
-        <h1>Birth of HOSTEE</h1>
-        <p>HOSTEE has arrived! Praise!</p>
-    </div>
-    <div class="col text-center">
-       <p>Column2 test</p>
-    </div>
 
-</div>
+<PageTitle>@t</PageTitle>
+
+@if (authenticated)
+{
+    <h3>@t</h3>
+}
+else
+{
+    <h3>@t</h3>
+    <p>Please sign in to view and write notes.</p>
+    <SignIn />
+    <button @onclick="RegRedirect">Register</button>
+}
+
 
 @code{
+    private bool authenticated = false;
+    private string t = "Welcome to H.O.S.T.E.E";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        authenticated = user.Identity.IsAuthenticated;
+
+        if (!authenticated)
+        {
+            t = "Welcome to H.O.S.T.E.E";
+        }
+        else
+        {
+            t = "Welcome to H.O.S.T.E.E" + "," + user.FindFirst(ClaimTypes.Name);
+        }
+
+    }
+
+    private void RegRedirect()
+    {
+        NavigationManager.NavigateTo("/register", forceLoad: true);
+    }
 
 }

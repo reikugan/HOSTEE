@@ -1,0 +1,96 @@
+﻿@page "/register"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject UserManager<ApplicationUser> uManager
+@inject SignInManager<ApplicationUser> sinManager
+@inject NavigationManager NavMan
+
+
+
+
+<div style="width: 100%; display: flex; justify-content: center">
+
+    <div class="box-container" style="width: 350px">
+        <EditForm Model="@regModel" OnValidSubmit="regUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div style="display: flex; justify-content: center">
+                <h3>Register</h3>
+            </div>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="Email">Email:</label>
+                </div>
+                <div class="col">
+                    <InputText id="Email" class="form-control" @bind-Value="regModel.Email" />
+                    <ValidationMessage For="@(() => regModel.Email)" />
+                </div>
+            </div>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="Password">Password:</label>
+                </div>
+                <div class="col">
+                    <InputText id="Password" class="form-control" @bind-Value="regModel.Password" type="password" />
+                    <ValidationMessage For="@(() => regModel.Password)" />
+                </div>
+            </div>
+            <div class="c-row">
+                <div class="col" style=" display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="ConfirmPassword">Confirm Password:</label>
+                </div>
+                <div class="col">
+                    <InputText id="ConfirmPassword" class="form-control" @bind-Value="regModel.ConfirmPassword" type="password" />
+                    <ValidationMessage For="@(() => regModel.ConfirmPassword)" />
+                </div>
+            </div>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="DateOfBirth">Date of Birth:</label>
+                </div>
+                <div class="col">
+                    <InputDate id="DateOfBirth" class="form-control" @bind-Value="regModel.BirthDate" />
+                    <ValidationMessage For="@(() => regModel.BirthDate)" />
+                </div>
+            </div>
+            <div style="display: flex; justify-content: center">
+                <button type="submit" class="btn btn-primary" style="width: 100%; background-color: darkred">Register</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<div>
+    <p>@mes</p>
+</div>
+
+@code {
+    private RegisterModel regModel = new RegisterModel();
+    private string mes;
+
+    private async Task regUser() 
+    {
+        if(regModel.Password != regModel.ConfirmPassword){
+            mes = "Password don't match";
+            Console.WriteLine(mes);
+            return;
+        }
+
+        var user = new ApplicationUser { UserName = regModel.Email, Email = regModel.Email };
+        var res = await uManager.CreateAsync(user, regModel.Password);
+
+        if(res.Succeeded){
+            mes = "Registration done";
+            Console.WriteLine(mes);
+            regModel = new RegisterModel();
+            StateHasChanged();
+            await Task.Delay(500);
+            await sinManager.SignInAsync(user, isPersistent: false);
+            await Task.Delay(200);
+            NavMan.NavigateTo("/inbox", forceLoad: true);
+        }
+        else {
+            mes = string.Join(" ", res.Errors.Select(e => e.Description));
+            Console.WriteLine(mes);
+        }
+    }
+}

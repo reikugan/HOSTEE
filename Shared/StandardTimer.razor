@@ -11,7 +11,7 @@
     </div>
     <div class="row" style="width: 100%; margin: 2px; display: flex; justify-content: center; gap: 1px;">
         <div class="col" style="padding: 0;">
-            <SfButton style="width: 100%; height: 100%; background-color: #5b5a5a" Disabled="@timerOn" @ref="btnStart" OnClick="StartTimer">Start</SfButton>
+            <SfButton style="width: 100%; height: 100%; background-color: #0dc645" Disabled="@timerOn" @ref="btnStart" OnClick="StartTimer">Start</SfButton>
         </div>
         <div class="col" style="padding: 0;">
             <SfButton style="width: 100%; height: 100%; background-color: #5b5a5a" Disabled="!timerOn" @ref="btnStop" OnClick="StopTimer">Stop</SfButton>
@@ -28,6 +28,9 @@
 
 
 @code {
+
+    [Parameter] public Guid TimerId { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
     SfButton btnStart;
     SfButton btnStop;
     SfButton btnReset;
@@ -73,8 +76,9 @@
         StateHasChanged();
     }
 
-    private void DeleteTimer(){
-        this.Dispose();
+    private async Task DeleteTimer()
+    {
+        await OnDelete.InvokeAsync(TimerId);
     }
 
         public void Dispose()
