@@ -3,12 +3,12 @@
 @using System.Security.Claims
 @inject SignInManager<ApplicationUser> sinManager
 @inject NavigationManager navigator
-@inject AuthenticationStateProvider authSP
+@inject CustomAuthStateProvider CustomAuthSP
 
 <div style="width: 100%; display: flex; justify-content: center">
 
     <div class="box-container" style="width: 320px">
-        <EditForm Model="@signInModel" OnValidSubmit="Sign">
+        <EditForm Model="@signIn" OnValidSubmit="Sign">
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div style="display: flex; justify-content: center">
@@ -20,7 +20,7 @@
                     <label for="Email">Email:</label>
                 </div>
                 <div class="col">
-                    <InputText id="Email" @bind-Value="signInModel.Email" />
+                    <InputText id="Email" @bind-Value="signIn.Email" />
                 </div>
             </div>
 
@@ -29,7 +29,7 @@
                     <label for="Password">Password:</label>
                 </div>
                 <div class="col">
-                    <InputText id="Password" @bind-Value="signInModel.Password" type="password" />
+                    <InputText id="Password" @bind-Value="signIn.Password" type="password" />
                 </div>
             </div>
 
@@ -38,7 +38,7 @@
                     <label for="RememberMe">Remember me: </label>
                 </div>
                 <div class="col">
-                    <InputCheckbox id="RememberMe" @bind-Value="signInModel.Remember" />
+                    <InputCheckbox id="RememberMe" @bind-Value="signIn.Remember" />
                 </div>
             </div>
 
@@ -54,31 +54,27 @@
 </div>
 
 @code {
-    private SignInModel signInModel = new SignInModel();
+    private SignInModel signIn = new SignInModel();
     private string mes = string.Empty;
-    private bool isSignedIn = false;
 
     private async Task Sign()
     {
         mes = "Signning In";
         StateHasChanged();
 
-        var result = await sinManager.PasswordSignInAsync(signInModel.Email, signInModel.Password, false, false);
+        bool loged = await CustomAuthSP.MarkAuthenticatedAsync(signIn.Email, signIn.Password);
 
 
-        if(result.Succeeded){
-
-            isSignedIn = true;
+        if(loged)
+        {
             mes = "SignIn success";
-            await InvokeAsync(StateHasChanged);
-
-            await Task.Delay(200);
+            await Task.Delay(500);
         } 
         else 
         {
             mes = "Fail.";
-            await InvokeAsync(StateHasChanged);
         }
+        StateHasChanged();
     }
 
     private void RegDirect() 
