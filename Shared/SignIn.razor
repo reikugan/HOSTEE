@@ -1,67 +1,83 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
+@using System.Security.Claims
 @inject SignInManager<ApplicationUser> sinManager
 @inject NavigationManager navigator
+@inject AuthenticationStateProvider authSP
 
 <div style="width: 100%; display: flex; justify-content: center">
 
-<div class="box-container" style="width: 320px">
-<EditForm Model="@signInModel" OnValidSubmit="Sign">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-        <div style="display: flex; justify-content: center">
-            <h3>Sign In</h3>
-        </div>
+    <div class="box-container" style="width: 320px">
+        <EditForm Model="@signInModel" OnValidSubmit="Sign">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div style="display: flex; justify-content: center">
+                <h3>Sign In</h3>
+            </div>
 
-        <div class="c-row">
-            <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
-                <label for="Email">Email:</label>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="Email">Email:</label>
+                </div>
+                <div class="col">
+                    <InputText id="Email" @bind-Value="signInModel.Email" />
+                </div>
             </div>
-            <div class="col">
-                <InputText id="Email" @bind-Value="signInModel.Email" />
-            </div>
-        </div>
 
-        <div class="c-row">
-            <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
-                <label for="Password">Password:</label>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="Password">Password:</label>
+                </div>
+                <div class="col">
+                    <InputText id="Password" @bind-Value="signInModel.Password" type="password" />
+                </div>
             </div>
-            <div class="col">
-                <InputText id="Password" @bind-Value="signInModel.Password" type="password" />
-            </div>
-        </div>
 
-        <div class="c-row">
-            <div class="col" style="display: flex; align-items: flex-start; justify-content: flex-start; max-width: 200px;">
-                <label for="RememberMe">Remember me: </label>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: flex-start; justify-content: flex-start; max-width: 200px;">
+                    <label for="RememberMe">Remember me: </label>
+                </div>
+                <div class="col">
+                    <InputCheckbox id="RememberMe" @bind-Value="signInModel.Remember" />
+                </div>
             </div>
-            <div class="col">
-                <InputCheckbox id="RememberMe" @bind-Value="signInModel.Remember" />
-            </div>
-        </div>
 
-        <div class="c-row">
-            <button class="btn btn-primary" style="width:50%" type="submit">Sign In</button>
-            <button class="btn btn-primary" style="width:50%" @onclick=RegDirect>Register</button>
-        </div>  
-</EditForm>
-</div>
+            <div class="c-row">
+                <button class="btn btn-primary" style="width:50%" type="submit">Sign In</button>
+                <button class="btn btn-primary" style="width:50%" @onclick=RegDirect>Register</button>
+            </div>  
+        </EditForm>
+    </div>
+    <div>
+        <p>?</p>
+    </div>
 </div>
 
 @code {
     private SignInModel signInModel = new SignInModel();
+    private string mes = string.Empty;
+    private bool isSignedIn = false;
 
     private async Task Sign()
     {
-        //if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password)) return;
+        mes = "Signning In";
+        StateHasChanged();
 
         var result = await sinManager.PasswordSignInAsync(signInModel.Email, signInModel.Password, false, false);
 
 
         if(result.Succeeded){
 
-            await Task.Delay(100);
-            navigator.NavigateTo("/index", forceLoad: true);
+            isSignedIn = true;
+            mes = "SignIn success";
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(200);
+        } 
+        else 
+        {
+            mes = "Fail.";
+            await InvokeAsync(StateHasChanged);
         }
     }
 

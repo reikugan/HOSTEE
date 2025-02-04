@@ -19,6 +19,15 @@
             </div>
             <div class="c-row">
                 <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
+                    <label for="Name">Full Name:</label>
+                </div>
+                <div class="col">
+                    <InputText id="Name" class="form-control" @bind-Value="regModel.Name" />
+                    <ValidationMessage For="@(() => regModel.Name)" />
+                </div>
+            </div>
+            <div class="c-row">
+                <div class="col" style="display: flex; align-items: center; justify-content: flex-start; max-width: 200px;">
                     <label for="Email">Email:</label>
                 </div>
                 <div class="col">
@@ -69,24 +78,40 @@
 
     private async Task regUser() 
     {
+        StateHasChanged();
         if(regModel.Password != regModel.ConfirmPassword){
             mes = "Password don't match";
             Console.WriteLine(mes);
             return;
         }
 
-        var user = new ApplicationUser { UserName = regModel.Email, Email = regModel.Email };
+        var check = await uManager.FindByEmailAsync(regModel.Email);
+        if(check != null){
+            mes = "User with such email already registered";
+            Console.WriteLine(mes);
+            return;
+        }
+
+        var user = new ApplicationUser 
+        { 
+            Name = regModel.Name,
+            UserName = regModel.Email, 
+            Email = regModel.Email
+        };
         var res = await uManager.CreateAsync(user, regModel.Password);
 
         if(res.Succeeded){
             mes = "Registration done";
             Console.WriteLine(mes);
-            regModel = new RegisterModel();
-            StateHasChanged();
-            await Task.Delay(500);
-            await sinManager.SignInAsync(user, isPersistent: false);
-            await Task.Delay(200);
-            NavMan.NavigateTo("/inbox", forceLoad: true);
+            try
+            {
+                await sinManager.SignInAsync(user, isPersistent: false);
+            }
+            catch (Exception ex){
+                mes = ex.Message;
+            }
+
+        NavMan.NavigateTo("/", forceLoad: true);
         }
         else {
             mes = string.Join(" ", res.Errors.Select(e => e.Description));

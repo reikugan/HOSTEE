@@ -5,37 +5,50 @@
 
 
 
-<PageTitle>@t</PageTitle>
+<PageTitle>HOST</PageTitle>
+
 
 @if (authenticated)
 {
     <h3>@t</h3>
+    <p>Authenticated: @authenticated</p>
 }
 else
 {
-    <h3>@t</h3>
+    <h3>Authenticated: @authenticated</h3>
     <p>Please sign in</p>
     <SignIn />
 }
 
+<!--
+@if(test)
+{
+<h3>@test</h3>
+<button @onclick="Swap">Swap</button>
+} else
+{
+<h3>Test value is: @test</h3>
+}
+-->
+
 
 @code{
     private bool authenticated = false;
+    private bool IsUserAuthenticated = false;
     private string t = "Welcome to H.O.S.T.E.E";
+
+    private bool test = false;
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        authenticated = user.Identity.IsAuthenticated;
+        if (!IsUserAuthenticated)
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            authenticated = user.Identity.IsAuthenticated;
+            IsUserAuthenticated = authenticated;
 
-        if (!authenticated)
-        {
-            t = "Welcome to H.O.S.T.E.E";
-        }
-        else
-        {
-            t = "Welcome to H.O.S.T.E.E" + "," + user.FindFirst(ClaimTypes.Name);
+            t = authenticated ? $"Welcome to H.O.S.T.E.E, {user.FindFirst(ClaimTypes.Name)?.Value}" : "Welcome to H.O.S.T.E.E";
         }
 
     }
@@ -43,6 +56,10 @@ else
     private void RegRedirect()
     {
         NavigationManager.NavigateTo("/register", forceLoad: true);
+    }
+
+    private void Swap(){
+        test = !test;
     }
 
 }

@@ -45,8 +45,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<INotesService, NotesService>();
 //builder.Services.AddAuthenticationStateSerialization();
-//builder.Services.AddSingleton<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
+//builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingAuthenticationStateProvider<ApplicationUser>>();
 
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NMaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWX1ec3RQQmNZUU13WEs=");
 
 var app = builder.Build();
 //

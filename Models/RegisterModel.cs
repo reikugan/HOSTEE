@@ -4,6 +4,8 @@ namespace HOSTEE.Models
 {
     public class RegisterModel
     {
+        [Required]
+        public string Name { get; set; }
 
         [Required, EmailAddress]
         public string Email { get; set; }
@@ -23,7 +25,7 @@ namespace HOSTEE.Models
 
         public RegisterModel()
         {
-
+            Name = string.Empty;
             Email = string.Empty;
             Password = string.Empty;
             ConfirmPassword = string.Empty;

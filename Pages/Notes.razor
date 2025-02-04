@@ -6,20 +6,17 @@
 
 <h3>Your Notes</h3>
 <div class="note-container">
-    <div class="row">
-        <p style="color: white">Title:*</p>
-        <InputText @bind-Value="notetitle"></InputText>
+    <div class="col" style="height: 100%">
+         <div><p style="color: white">Title:*</p></div>
+        <InputText class="form-control" style="width: 100%;" @bind-Value="notetitle"></InputText>
+
+    <div><p style="color: white">Content:*</p></div>
+    <div style="display: flex; flex-grow: 1; align-items: stretch; height: 100%">
+        <InputText style="flex-grow: 1; height: 100px; background-color: cornflowerblue" @bind-Value="notecontent"></InputText>
     </div>
-    <div class="row">
-        <p style="color: white">Content:*</p>
-    </div>
-    <div class="row">
-        <InputText @bind-Value="notecontent"></InputText>
     </div>
 </div>
-
-
-<SfButton @onclick="CreateNote">New note</SfButton>
+<SfButton @onclick="CreateNote">Add Note</SfButton>
 
 <ul>
     @foreach (var note in notes)
