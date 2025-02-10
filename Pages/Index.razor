@@ -9,6 +9,19 @@
 <PageTitle>HOST</PageTitle>
 
 
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            <h3>Welcome, @context.User.Identity.Name!</h3>
+            <p>IsAuthenticated? @context.User.Identity.IsAuthenticated</p>
+        </Authorized>
+        <NotAuthorized>
+            <p>Please sign in</p>
+            <SignIn OnSignIn="RefreshState" />
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<!--
 @if (authenticated)
 {
     <h3>@t</h3>
@@ -19,16 +32,6 @@ else
     <h3>Authenticated: @authenticated</h3>
     <p>Please sign in</p>
     <SignIn />
-}
-
-<!--
-@if(test)
-{
-<h3>@test</h3>
-<button @onclick="Swap">Swap</button>
-} else
-{
-<h3>Test value is: @test</h3>
 }
 -->
 
@@ -45,7 +48,9 @@ else
             var user = authState.User;
             authenticated = user.Identity.IsAuthenticated;
 
+            Console.WriteLine($"From Index/OnInitialized: {authenticated}, out user is {user.Identity.Name}");
             t = authenticated ? $"Welcome to H.O.S.T.E.E, {user.FindFirst(ClaimTypes.Name)?.Value}" : "Welcome to H.O.S.T.E.E";
+            StateHasChanged();
     }
 
     private void RegRedirect()
@@ -53,8 +58,10 @@ else
         NavigationManager.NavigateTo("/register", forceLoad: true);
     }
 
-    private void Swap(){
-        test = !test;
+    private void RefreshState()
+    {
+        StateHasChanged();
     }
+
 
 }

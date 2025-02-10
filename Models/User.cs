@@ -8,6 +8,9 @@
         public string Password { get; set; }
         public DateOnly BirthDate { get; set; }
 
+        public ICollection<Exercise> Exercises { get; set; }
+        public ICollection<TrainingProgram> TrainingPrograms { get; set; }
+        public ICollection<Training> Trainings { get; set; }
 
     }
 }

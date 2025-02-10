@@ -4,11 +4,14 @@
 @inject SignInManager<ApplicationUser> sinManager
 @inject NavigationManager navigator
 @inject CustomAuthStateProvider CustomAuthSP
+@inject HttpClient http
+@inject IHttpClientFactory HttpClientFactory
+
 
 <div style="width: 100%; display: flex; justify-content: center">
 
     <div class="box-container" style="width: 320px">
-        <EditForm Model="@signIn" OnValidSubmit="Sign">
+        <EditForm Model="@signIn" OnValidSubmit="SignUser">
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div style="display: flex; justify-content: center">
@@ -34,15 +37,6 @@
             </div>
 
             <div class="c-row">
-                <div class="col" style="display: flex; align-items: flex-start; justify-content: flex-start; max-width: 200px;">
-                    <label for="RememberMe">Remember me: </label>
-                </div>
-                <div class="col">
-                    <InputCheckbox id="RememberMe" @bind-Value="signIn.Remember" />
-                </div>
-            </div>
-
-            <div class="c-row">
                 <button class="btn btn-primary" style="width:50%" type="submit">Sign In</button>
                 <button class="btn btn-primary" style="width:50%" @onclick=RegDirect>Register</button>
             </div>  
@@ -57,24 +51,23 @@
     private SignInModel signIn = new SignInModel();
     private string mes = string.Empty;
 
-    private async Task Sign()
+    [Parameter] public EventCallback OnSignIn { get; set; }
+
+    private async Task SignUser()
     {
-        mes = "Signning In";
-        StateHasChanged();
+        var client = HttpClientFactory.CreateClient("ServerAPI");
+        var resp = await client.PostAsJsonAsync("api/auth/login", signIn);
 
-        bool loged = await CustomAuthSP.MarkAuthenticatedAsync(signIn.Email, signIn.Password);
-
-
-        if(loged)
+        if(resp.IsSuccessStatusCode)
         {
-            mes = "SignIn success";
-            await Task.Delay(500);
+            Console.WriteLine("User logged in successfully");
+            await Task.Delay(200);
+            navigator.NavigateTo("/", forceLoad: true);
         } 
         else 
         {
-            mes = "Fail.";
+            Console.WriteLine("LoginFailed");
         }
-        StateHasChanged();
     }
 
     private void RegDirect() 
