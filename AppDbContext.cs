@@ -16,6 +16,8 @@ namespace HOSTEE
         public DbSet<TrainingProgram> TrainingPrograms { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<Training> TrainingSessions { get; set; }
+        public DbSet<ProgramExercise> ProgramExercises { get; set; }
+        public DbSet<TrainingExercise> TrainingExercises { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

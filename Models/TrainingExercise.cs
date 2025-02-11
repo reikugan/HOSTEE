@@ -14,6 +14,5 @@
         public Boolean Completed { get; set; }
         public string Comments { get; set; }
 
-
     }
 }
