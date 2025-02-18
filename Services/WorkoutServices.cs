@@ -12,7 +12,7 @@ namespace HOSTEE.Services
         }
 
         // EXERCISE CRUD:
-        public async Task<IEnumerable<Exercise>> GetUserExercisesAsync(int  userId)
+        public async Task<IEnumerable<Exercise>> GetUserExercisesAsync(int userId)
         {
             return await _context.Exercises.Where(e => e.UserId == userId).ToListAsync();
         }
@@ -178,7 +178,7 @@ namespace HOSTEE.Services
             }
             else
             {
-                throw new Exception($"No data found for {userId} with exercise {exerciseId}";
+                throw new Exception($"No data found for {userId} with exercise {exerciseId}");
             }
         }
 

@@ -1,5 +1,7 @@
 ﻿@using System.Security.Claims;
+@using Microsoft.AspNetCore.Components.Authorization
 @using HOSTEE.Models;
+@using Microsoft.AspNetCore.WebUtilities
 @page "/"
 @inject AuthenticationStateProvider authSP
 @inject NavigationManager NavigationManager
@@ -12,26 +14,26 @@
 <CascadingAuthenticationState>
     <AuthorizeView>
         <Authorized>
-            <h3>Welcome, @context.User.Identity.Name!</h3>
-            <p>IsAuthenticated? @context.User.Identity.IsAuthenticated</p>
+            <h1>Welcome, @usersName</h1>
+            <p>Your ID: @usersId</p>
         </Authorized>
         <NotAuthorized>
             <p>Please sign in</p>
-            <SignIn OnSignIn="RefreshState" />
+            <button @onclick=SignInRedirect>Sign In</button>
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
 <!--
 @if (authenticated)
 {
-    <h3>@t</h3>
-    <p>Authenticated: @authenticated</p>
+<h3>@t</h3>
+<p>Authenticated: @authenticated</p>
 }
 else
 {
-    <h3>Authenticated: @authenticated</h3>
-    <p>Please sign in</p>
-    <SignIn />
+<h3>Authenticated: @authenticated</h3>
+<p>Please sign in</p>
+<SignIn />
 }
 -->
 
@@ -40,22 +42,47 @@ else
     private bool authenticated = false;
     private string t = "Welcome to H.O.S.T.E.E";
 
+    private string usersName = "noname";
+    private string usersId = "no id";
+
     private bool test = false;
 
     protected override async Task OnInitializedAsync()
     {
-            var authState = await authSP.GetAuthenticationStateAsync();
-            var user = authState.User;
-            authenticated = user.Identity.IsAuthenticated;
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("forceRefresh", out var _))
+        {
+            NavigationManager.NavigateTo("/", forceLoad: false);
+        }
 
-            Console.WriteLine($"From Index/OnInitialized: {authenticated}, out user is {user.Identity.Name}");
-            t = authenticated ? $"Welcome to H.O.S.T.E.E, {user.FindFirst(ClaimTypes.Name)?.Value}" : "Welcome to H.O.S.T.E.E";
-            StateHasChanged();
+        var authState = await authSP.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if(user.Identity?.IsAuthenticated == true)
+        {
+            Console.WriteLine("Index: User authenticated!");
+            usersName = user.Identity?.Name;
+            usersId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+        else 
+        {
+            Console.WriteLine("Index: User is not Authenticated");
+        }
+        //authenticated = user.Identity.IsAuthenticated;
+
+        //Console.WriteLine($"From Index/OnInitialized: {authenticated}, out user is {user.Identity.Name}");
+        //t = authenticated ? $"Welcome to H.O.S.T.E.E, {user.FindFirst(ClaimTypes.Name)?.Value}" : "Welcome to H.O.S.T.E.E";
+        StateHasChanged();
     }
 
     private void RegRedirect()
     {
         NavigationManager.NavigateTo("/register", forceLoad: true);
+    }
+
+    private void SignInRedirect()
+    {
+        NavigationManager.NavigateTo("/signin", forceLoad: true);
     }
 
     private void RefreshState()

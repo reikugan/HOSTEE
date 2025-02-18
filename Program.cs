@@ -33,21 +33,44 @@ builder.Services.AddHttpClient("ServerAPI", client =>
 builder.Services.AddScoped<ChatBotService>();
 builder.Services.Configure<ChatBotService>(o => builder.Configuration.GetSection("OpenAI").Bind(o));
 
+//WorkoutServices
+builder.Services.AddScoped<WorkoutServices>();
+
 //DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Identity
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
+    options.SignIn.RequireConfirmedAccount = false;
+    //options.Password.RequireDigit = true;
+    //options.Password.RequiredLength = 8;
+    })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-//Authentication Services:
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie();
-builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<CustomAuthStateProvider>());
+
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/signin";
+    options.LogoutPath = "/signout";
+    options.Cookie.Name = "YourAppAuth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+});
+
+builder.Services.AddAuthorization();
+
+//Authentication Services:
+//builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingServerAuthenticationStateProvider>();
 builder.Services.AddControllers();
 //===
 
@@ -65,16 +88,17 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
+app.MapRazorPages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

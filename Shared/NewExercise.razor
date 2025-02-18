@@ -1,0 +1,62 @@
+﻿@using HOSTEE.Models
+
+<h3>NewExercise</h3>
+
+<EditForm Model="@exercise" OnValidSubmit="SubmitExercise">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <div class="col">
+            <div class="row">
+                <label for="Name">Name:</label>
+            </div>
+            <div class="row">
+                <InputText id="Name" class="form-control" @bind-Value="exercise.Name"></InputText>
+            </div>
+            <div class="row">
+                <label for="Description">Description:</label>
+            </div>
+            <div class="row">
+                <InputText id="Description class="form-control" @bind-Value="exercise.Description"></InputText>
+            </div>
+            <div class="row">
+                <label for="Type">Type:</label>
+            </div>
+            <div class="row">
+                <InputText id="Type" class="form-control" @bind-Value="exercise.Type"></InputText>
+            </div>
+            <div class="row">
+                <label for="MuscleGroup">Muscle Group:</label>
+            </div>
+            <div class="row">
+                <InputText id="MuscleGroup" class="for-control" @bind-Value="exercise.MuscleGroup"></InputText>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <button type="submit">Add</button>
+                </div>
+                <div class="col">
+                    <button @onclick="Reset">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</EditForm>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+    [Parameter] public EventCallback<Exercise> OnExCreated { get; set; }
+
+    public Exercise exercise = new();
+
+    public async Task SubmitExercise()
+    {
+
+    }
+
+    public void Reset()
+    {
+        exercise = new Exercise();
+    }
+}

@@ -1,17 +1,19 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Security.Claims
+@using HOSTEE.Services
 @inject SignInManager<ApplicationUser> sinManager
 @inject NavigationManager navigator
-@inject CustomAuthStateProvider CustomAuthSP
+@inject AuthenticationStateProvider authStatePRovider
+@inject IAuthService AuthService
 @inject HttpClient http
 @inject IHttpClientFactory HttpClientFactory
 
 
 <div style="width: 100%; display: flex; justify-content: center">
 
-    <div class="box-container" style="width: 320px">
-        <EditForm Model="@signIn" OnValidSubmit="SignUser">
+    <div class="box-container" style="width: 320px; padding: 3px;">
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div style="display: flex; justify-content: center">
@@ -23,7 +25,7 @@
                     <label for="Email">Email:</label>
                 </div>
                 <div class="col">
-                    <InputText id="Email" @bind-Value="signIn.Email" />
+                    <InputText id="Email" @bind-Value="loginModel.Email" />
                 </div>
             </div>
 
@@ -32,7 +34,7 @@
                     <label for="Password">Password:</label>
                 </div>
                 <div class="col">
-                    <InputText id="Password" @bind-Value="signIn.Password" type="password" />
+                    <InputText id="Password" @bind-Value="loginModel.Password" type="password" />
                 </div>
             </div>
 
@@ -42,31 +44,33 @@
             </div>  
         </EditForm>
     </div>
-    <div>
-        <p>?</p>
-    </div>
 </div>
 
 @code {
-    private SignInModel signIn = new SignInModel();
+    private LoginModel loginModel = new LoginModel();
     private string mes = string.Empty;
 
     [Parameter] public EventCallback OnSignIn { get; set; }
 
-    private async Task SignUser()
-    {
-        var client = HttpClientFactory.CreateClient("ServerAPI");
-        var resp = await client.PostAsJsonAsync("api/auth/login", signIn);
 
-        if(resp.IsSuccessStatusCode)
+    private async Task HandleLogin()
+    {
+        try
         {
-            Console.WriteLine("User logged in successfully");
-            await Task.Delay(200);
-            navigator.NavigateTo("/", forceLoad: true);
-        } 
-        else 
+            var result = await AuthService.LoginAsync(loginModel.Email, loginModel.Password);
+
+            if(result)
+            {
+                navigator.NavigateTo("/");
+            }
+            else
+            {
+                Console.WriteLine("From SignIn.razor, HandleLogin() Login failed");
+            }
+        }
+        catch(Exception ex)
         {
-            Console.WriteLine("LoginFailed");
+            Console.WriteLine($"From SignIn.razor, HandleLogin() caugth exception: {ex.Message} + {ex}");
         }
     }
 
