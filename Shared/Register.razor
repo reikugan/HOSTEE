@@ -1,8 +1,8 @@
 ﻿@page "/register"
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
-@inject UserManager<ApplicationUser> uManager
-@inject SignInManager<ApplicationUser> sinManager
+@inject UserManager<User> uManager
+@inject SignInManager<User> sinManager
 @inject NavigationManager NavMan
 
 
@@ -92,16 +92,17 @@
             return;
         }
 
-        var user = new ApplicationUser 
+        var user = new User 
         { 
             Name = regModel.Name,
             UserName = regModel.Email, 
-            Email = regModel.Email
+            Email = regModel.Email,
+            DateOfBirth = regModel.BirthDate
         };
         var res = await uManager.CreateAsync(user, regModel.Password);
 
         if(res.Succeeded){
-            mes = "Registration done";
+            mes = "Registration completed";
             Console.WriteLine(mes);
             try
             {
@@ -110,10 +111,10 @@
             catch (Exception ex){
                 mes = ex.Message;
             }
-
         NavMan.NavigateTo("/", forceLoad: true);
         }
-        else {
+        else
+        {
             mes = string.Join(" ", res.Errors.Select(e => e.Description));
             Console.WriteLine(mes);
         }

@@ -11,7 +11,7 @@ namespace HOSTEE.Models
         public string Description { get; set; }
         public DateTime CreatedDate { get; set; }
         //public string Author { get; set; }
-        public int UserId   { get; set; }
+        public string UserId   { get; set; }
         public User User { get; set; }
 
         public ICollection<ProgramExercise> Exercises { get; set; }

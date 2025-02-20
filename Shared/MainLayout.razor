@@ -1,15 +1,30 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager navigator
+@inject AuthenticationStateProvider asp
 
 <PageTitle>HOSTEE</PageTitle>
 
 <div class="page">
-    <div class="sidebar">
+    <div class="sidebar" style="background-color: dimgray">
         <NavMenu />
     </div>
 
     <main>
         <div class="top-row px-4">
-            <p>Hello?</p>
+            <AuthorizeView>
+                <Authorized>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; height: inherit; margin-right: 20px">
+                        <p style="margin: 0;">@name</p>
+                        <p style="margin: 0;">@date.ToString("dd MMMM yyyy")</p>
+                    </div>
+                    <div style="width: auto">
+                        <button class="btn btn-primary" @onclick="SignOut">Log Out</button>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <button>SignIn</button>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
         <article class="content px-4">
@@ -17,3 +32,25 @@
         </article>
     </main>
 </div>
+
+
+@code {
+    public DateOnly date = DateOnly.FromDateTime(DateTime.Now);
+    public string name = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await asp.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if(user.Identity?.IsAuthenticated == true)
+        {
+            name = user.FindFirst("Name")?.Value ?? "Name unknown";
+        }
+    }
+
+    private async Task SignOut()
+    {
+        navigator.NavigateTo("/signout", forceLoad: true);
+    }
+}

@@ -16,6 +16,7 @@
         <Authorized>
             <h1>Welcome, @usersName</h1>
             <p>Your ID: @usersId</p>
+            <p>Email: @email</p>
         </Authorized>
         <NotAuthorized>
             <p>Please sign in</p>
@@ -23,19 +24,7 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
-<!--
-@if (authenticated)
-{
-<h3>@t</h3>
-<p>Authenticated: @authenticated</p>
-}
-else
-{
-<h3>Authenticated: @authenticated</h3>
-<p>Please sign in</p>
-<SignIn />
-}
--->
+
 
 
 @code{
@@ -44,6 +33,7 @@ else
 
     private string usersName = "noname";
     private string usersId = "no id";
+    private string email = "no email";
 
     private bool test = false;
 
@@ -61,17 +51,14 @@ else
         if(user.Identity?.IsAuthenticated == true)
         {
             Console.WriteLine("Index: User authenticated!");
-            usersName = user.Identity?.Name;
-            usersId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            email = user.Identity?.Name ?? "Email not found";
+            usersName = user.FindFirst("Name")?.Value ?? "No Name :(";
+            usersId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Id not found";
         }
         else 
         {
             Console.WriteLine("Index: User is not Authenticated");
         }
-        //authenticated = user.Identity.IsAuthenticated;
-
-        //Console.WriteLine($"From Index/OnInitialized: {authenticated}, out user is {user.Identity.Name}");
-        //t = authenticated ? $"Welcome to H.O.S.T.E.E, {user.FindFirst(ClaimTypes.Name)?.Value}" : "Welcome to H.O.S.T.E.E";
         StateHasChanged();
     }
 

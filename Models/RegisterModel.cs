@@ -21,7 +21,7 @@ namespace HOSTEE.Models
 
         [Required]
         [DataType(DataType.Date)]
-        public DateTime BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
 
         public RegisterModel()
         {

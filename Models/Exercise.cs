@@ -12,7 +12,7 @@ namespace HOSTEE.Models
         public string Type { get; set; }
         public string MuscleGroup { get; set; }
 
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public User User { get; set; }
 
         public ICollection<ProgramExercise> Programs { get; set; }

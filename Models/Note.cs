@@ -10,7 +10,7 @@ namespace HOSTEE.Models
         public string Content { get; set; }
         public DateTime Created { get; set; } = DateTime.UtcNow;
         public string UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        public User User { get; set; }
         public int? FolderId { get; set; }
         public Folder Folder { get; set; }
     }

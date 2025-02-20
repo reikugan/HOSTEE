@@ -12,7 +12,7 @@ namespace HOSTEE.Services
         }
 
         // EXERCISE CRUD:
-        public async Task<IEnumerable<Exercise>> GetUserExercisesAsync(int userId)
+        public async Task<IEnumerable<Exercise>> GetUserExercisesAsync(string userId)
         {
             return await _context.Exercises.Where(e => e.UserId == userId).ToListAsync();
         }
@@ -24,11 +24,12 @@ namespace HOSTEE.Services
             return ex;
         }
 
-        public async Task DeleteExerciseAsync(int exId, int userId)
+        public async Task DeleteExerciseAsync(int exId, string userId)
         {
             var exercise = await _context.Exercises.Where(ex => ex.Id == exId && ex.UserId == userId).FirstOrDefaultAsync();
             if (exercise != null)
             {
+                Console.WriteLine($"Removing exercise: {exercise.Name}, {exercise.Id}");
                 _context.Exercises.Remove(exercise);
                 await _context.SaveChangesAsync();
             }
@@ -50,7 +51,7 @@ namespace HOSTEE.Services
 
 
         //Training Program CRUD:
-        public async Task<IEnumerable<TrainingProgram>> GetUserProgramsAsync(int userId)
+        public async Task<IEnumerable<TrainingProgram>> GetUserProgramsAsync(string userId)
         {
             return await _context.TrainingPrograms.Where(tp => tp.UserId == userId).ToListAsync();
         }
@@ -107,7 +108,7 @@ namespace HOSTEE.Services
            
         }
 
-        public async Task DeleteProgramAsync(int programId, int userId)
+        public async Task DeleteProgramAsync(int programId, string userId)
         {
             var tp = await _context.TrainingPrograms
                 .Include(tp => tp.Exercises)
@@ -148,7 +149,7 @@ namespace HOSTEE.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Training>> GetUserTrainingSessionsAsync(int userId)
+        public async Task<IEnumerable<Training>> GetUserTrainingSessionsAsync(string userId)
         {
             var trainings = await _context.TrainingSessions
                 .Where(t => t.UserId == userId)
@@ -165,7 +166,7 @@ namespace HOSTEE.Services
             }
         }
 
-        public async Task<IEnumerable<TrainingExercise>> GetCompletedExercisesAsync(int exerciseId, int userId)
+        public async Task<IEnumerable<TrainingExercise>> GetCompletedExercisesAsync(int exerciseId, string userId)
         {
             var ex = await _context.TrainingExercises
                 .Where(te => te.Training.UserId == userId && te.ExerciseId == exerciseId)

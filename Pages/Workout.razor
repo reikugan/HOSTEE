@@ -2,20 +2,20 @@
 @using HOSTEE.Services;
 @inject NavigationManager navigator
 @inject AuthenticationStateProvider authSP
+@inject WorkoutServices workoutService
 @page "/workout"
 
 <CascadingAuthenticationState>
     <AuthorizeView>
         <Authorized>
-            <h3>Workout</h3>
-            <p>@userName</p>
+            <h3>Workout for, @userName</h3>
             <div class="workout-table">
                 <div style="width: 100%; height: 60px; display: flex; justify-content: center">
                     <div class="col">
                         <button class="workout-panel-button">New Training</button>
                     </div>
                     <div class="col">
-                        <button class="workout-panel-button">Manage Exercises</button>
+                        <button class="workout-panel-button" @onclick="ExPanelDraw">Manage Exercises</button>
                     </div>
                     <div class="col">
                         <button class="workout-panel-button">Your training programs</button>
@@ -25,12 +25,38 @@
                     </div>
                 </div>
 
-                <div style="width: 100%">
+                <div style="width: 100%; justify-content: center; border: 3px solid red">
+                    @if(exPanel == true)
+                    {
+                        @if(exercises.Any())
+                        {
+                            @foreach (var ex in exercises)
+                            {
+                                <div style="display: block; text-align: left; gap: 5px; width: 300px; height: fit-content; margin: 10px; background-color: lightslategray; border: 3px solid green">
+                                    <p style="color: white">Name: @ex.Name</p>
+                                    <p style="color: white">Type: @ex.Type</p>
+                                    <p style="color: white">Muscle Group: @ex.MuscleGroup</p>
+                                    <p style="color: white; font-weight: bold;">Description: </p>
+                                    <p style="color: white">@ex.Description</p>
+                                    <button class="btn btn-primary" style="width: 100%; color: white; background-color: darkred" @onclick="() => RemoveExercise(ex)">Remove</button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p style="color: white">You don't have any exrcises saved yet</p>
+                        }
+                        <button @onclick="CreateExercise">Add Exerice</button>
+                    }
+
                     @foreach (var fragment in fragments)
                     {
-                        <div>
-                            @fragment
-                        </div>
+                        @if (creatingEx == true)
+                        {
+                            <div>
+                                @fragment
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -45,10 +71,13 @@
 
 @code {
     public string userName = "no name";
-    public int userID;
+    public string userID;
+    public bool creatingEx = false;
 
-    public List<Exercise> exercises;
-    public List<RenderFragment> fragments;
+    public bool exPanel = false;
+
+    public List<Exercise> exercises = new();
+    public List<RenderFragment> fragments = new();
 
 
     protected override async Task OnInitializedAsync()
@@ -59,9 +88,9 @@
 
         if(user.Identity?.IsAuthenticated == true)
         {
-            userName = user.Identity.Name;
+            userName = user.FindFirst("Name")?.Value ?? "Unknown";
             userID = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            exercises = await WorkoutServices.GetUserExercisesAsync(userID);
+            exercises = (await workoutService.GetUserExercisesAsync(userID)).ToList();
         }
     }
 
@@ -70,13 +99,37 @@
         RenderFragment f = builder =>
         {
             builder.OpenComponent<NewExercise>(0);
+            builder.AddAttribute(1, "UserId", userID);
+            builder.AddAttribute(2, "OnExCreated", EventCallback.Factory.Create<Exercise>(this, OnExerciseCreated));
             builder.CloseComponent();
         };
+        creatingEx = true;
         fragments.Add(f);
+        StateHasChanged();
+    }
+
+    public async Task OnExerciseCreated(Exercise ex)
+    {
+        exercises.Add(ex);
+        await workoutService.CreateExerciseAsync(ex);
+        creatingEx = false;
+        StateHasChanged();
+    }
+
+    public async Task RemoveExercise(Exercise ex)
+    {
+        await workoutService.DeleteExerciseAsync(ex.Id, ex.UserId);
+        exercises.Remove(ex);
+        StateHasChanged();
     }
 
     public void SignInRedirect()
     {
         navigator.NavigateTo("/singin", forceLoad: true);
+    }
+
+    public void ExPanelDraw()
+    {
+        exPanel = !exPanel;
     }
 }

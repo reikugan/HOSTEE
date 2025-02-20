@@ -4,17 +4,20 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace HOSTEE.Pages
 {
     public class SignInModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> sinManager;
+        private readonly SignInManager<User> sinManager;
+        private readonly UserManager<User> uManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public SignInModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public SignInModel(SignInManager<User> signInManager, UserManager<User> userManager, ILogger<LoginModel> logger)
         {
             sinManager = signInManager;
+            uManager = userManager;
             _logger = logger;
         }
 
@@ -55,7 +58,7 @@ namespace HOSTEE.Pages
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            Console.WriteLine("OnPostAsync reached!");
+            //Console.WriteLine("OnPostAsync reached!");
             returnUrl ??= Url.Content("~/");
 
             if (!ModelState.IsValid)
@@ -65,16 +68,35 @@ namespace HOSTEE.Pages
                     Console.WriteLine($"ModelState error: {error.ErrorMessage}");
                 }
             }
-
-
+            
             if (ModelState.IsValid)
             {
-                Console.WriteLine("ModelState is valid");
-                var result = await sinManager.PasswordSignInAsync(Input.Email,
-                    Input.Password, true, lockoutOnFailure: false);
+                var result = await sinManager.PasswordSignInAsync(Input.Email, Input.Password, true, lockoutOnFailure: false);
+                //Console.WriteLine("ModelState is Valid, user is not null");
 
+                
                 if (result.Succeeded)
                 {
+                    var user = await uManager.FindByEmailAsync(Input.Email);
+                    var claims = await uManager.GetClaimsAsync(user);
+
+                    var existingClaims = await uManager.GetClaimsAsync(user);
+                    var oldclaims = existingClaims.Where(c => c.Type == "Name" || c.Type == "Birthday").ToList();
+                    if (oldclaims.Any())
+                    {
+                        await uManager.RemoveClaimsAsync(user, oldclaims);
+                    }
+
+                    var newClaims = new List<Claim>
+                        {
+                            new Claim("Name", user.Name ?? ""),
+                            new Claim("Birthday", user.DateOfBirth.ToString())
+                        };
+
+                    await uManager.AddClaimsAsync(user, newClaims);
+
+                    await sinManager.RefreshSignInAsync(user);
+
                     _logger.LogInformation("User logged in.");
                     Console.WriteLine($"ON POST ASYNC: signIn success. Url: {returnUrl}.");
                     return LocalRedirect(returnUrl + "?forceRefresh=true");

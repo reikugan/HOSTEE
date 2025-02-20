@@ -158,6 +158,22 @@ a, .btn-link {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.signin-panel {
+    width: 300px;
+    height: 200px;
+    border: 2px solid blue;
+    background-color: dimgray;
+}
+
+.new-ex-panel{
+    width: 30%;
+    height: auto;
+    border: 2px solid blue;
+    background-color: dimgray;
+    margin: 10px;
+    padding: 20px;
+    color: white;        
+}
 
 #blazor-error-ui {
     background: lightyellow;
