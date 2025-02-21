@@ -53,7 +53,10 @@ namespace HOSTEE.Services
         //Training Program CRUD:
         public async Task<IEnumerable<TrainingProgram>> GetUserProgramsAsync(string userId)
         {
-            return await _context.TrainingPrograms.Where(tp => tp.UserId == userId).ToListAsync();
+            return await _context.TrainingPrograms.Where(tp => tp.UserId == userId)
+                .Include(tp => tp.Exercises).ThenInclude(pe => pe.Exercise)
+                .Include(tp => tp.Trainings)
+                .ToListAsync();
         }
 
 

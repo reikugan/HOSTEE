@@ -1,0 +1,93 @@
+﻿@using System.Security.Claims;
+@using HOSTEE.Services;
+@inject AuthenticationStateProvider  asp
+@inject WorkoutServices workoutService
+
+<div style="display:flex; flex-direction: column; width: 100%; height: 100%">
+    @if(programs.Any())
+    {
+        @foreach(TrainingProgram p in programs)
+        {
+            <div class="workout-element">
+                <p>Name: @p.Name</p>
+                <p>Description: @p.Description</p>
+                <p>Created: @p.CreatedDate.ToString()</p>
+                <p>Author: @p.UserId</p>
+                <button>Edit</button>
+                <button>Remove</button>
+            </div>
+        }
+    }
+    else
+    {
+        <div>
+        <p>You don't have any Training Programs yet!</p>
+        <p>Start by creating one!</p>
+        <button class="btn btn-primary">Create Program</button>
+        </div>
+    }
+
+    <div>
+        <button class="btn btn-primary" @onclick="CreateProgram">New Program</button>
+    </div>
+
+    @if(creating)
+    {
+        <div class="modal-backdrop">
+            <div class="modal">
+                <EditForm Model="@prog" OnValidSubmit="SaveChanges">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <label>Name:</label>
+                    <InputText class="form-control" @bind-Value="prog.Name" />
+
+                    <label>Description:</label>
+                    <InputText class="form-control" @bind-Value="prog.Description" />
+
+                    <button type="submit">Save</button>
+                    <button type="button" @onclick="CloseModal">Close</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public string userId { get; set; }
+    public bool creating = false;
+    public List<Exercise> exercises = new();
+    public List<TrainingProgram> programs;
+    public TrainingProgram prog;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await asp.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //exercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
+            programs = (await workoutService.GetUserProgramsAsync(userId)).ToList();
+        }
+
+    }
+
+    public void CreateProgram()
+    {
+        creating = true;
+    }
+
+    public async void SaveChanges()
+    {
+        prog.UserId = userId;
+        await workoutService.CreateProgramAsync(prog, exercises);
+        CloseModal();
+    }
+
+    void CloseModal() => creating = false;
+
+}

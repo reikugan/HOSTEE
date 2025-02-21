@@ -4,12 +4,11 @@
     <EditForm Model="@exercise" OnValidSubmit="SubmitExercise">
         <DataAnnotationsValidator />
         <ValidationSummary />
-        <div>
-            <div class="col">
+
                 <div class="row">
-                    <h3>NewExercise</h3>
+                    <h3>@(editing ? "Edit Exercise" : "NewExercise") </h3>
                 </div>
-                <div class="row" style="align-content:start">
+                <div class="row" style="justify-content: left">
                     <label for="Name">Name:</label>
                 </div>
                 <div class="row">
@@ -33,34 +32,59 @@
                 <div class="row">
                     <InputText id="MuscleGroup" class="form-control" @bind-Value="exercise.MuscleGroup"></InputText>
                 </div>
+
                 <div class="row" style="padding: 10px">
                     <div class="col">
-                        <button class="btn btn-primary" style="width:100%; background-color: lightgreen" type="submit">Add</button>
+                        <button class="btn btn-primary" style="width:100%; background-color: lightgreen" type="submit">@(editing ? "Save" : "Add")</button>
                     </div>
                     <div class="col">
                         <button class="btn btn-primary" style="width:100%" @onclick="Reset">Clear</button>
                     </div>
                 </div>
-            </div>
-        </div>
 
     </EditForm>
 </div>
 
 @code {
     [Parameter] public string UserId { get; set; }
-    [Parameter] public EventCallback<Exercise> OnExCreated { get; set; }
+    [Parameter] public EventCallback<Exercise> OnExSaved { get; set; }
+    [Parameter] public Exercise? EditingExercise { get; set; }
 
     public Exercise exercise = new();
+    public bool editing = false;
+
+    protected override void OnParametersSet()
+    {
+
+        if (EditingExercise != null)
+        {
+            exercise = new Exercise
+                {
+                    Id = EditingExercise.Id,
+                    Name = EditingExercise.Name,
+                    Type = EditingExercise.Type,
+                    MuscleGroup = EditingExercise.MuscleGroup,
+                    Description = EditingExercise.Description,
+                    UserId = EditingExercise.UserId
+                };
+            editing = true;
+        }
+        else
+        {
+            exercise.UserId = UserId;
+            editing = false;
+        }
+    }
 
     public async Task SubmitExercise()
     {
         exercise.UserId = UserId;
-        await OnExCreated.InvokeAsync(exercise);
+        await OnExSaved.InvokeAsync(exercise);
     }
 
     public void Reset()
     {
-        exercise = new Exercise();
+        exercise = new Exercise { UserId = UserId };
+        editing = false;
     }
 }

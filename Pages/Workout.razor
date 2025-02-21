@@ -1,5 +1,6 @@
 ﻿@using System.Security.Claims;
 @using HOSTEE.Services;
+@using HOSTEE.Shared.Workout;
 @inject NavigationManager navigator
 @inject AuthenticationStateProvider authSP
 @inject WorkoutServices workoutService
@@ -12,51 +13,31 @@
             <div class="workout-table">
                 <div style="width: 100%; height: 60px; display: flex; justify-content: center">
                     <div class="col">
-                        <button class="workout-panel-button">New Training</button>
+                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.NewTraining">New Training</button>
                     </div>
                     <div class="col">
-                        <button class="workout-panel-button" @onclick="ExPanelDraw">Manage Exercises</button>
+                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.ManageExercises">Manage Exercises</button>
                     </div>
                     <div class="col">
-                        <button class="workout-panel-button">Your training programs</button>
+                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.ManagePrograms">Your training programs</button>
                     </div>
                     <div class="col">
-                        <button class="workout-panel-button">History and progression</button>
+                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.History">History and progression</button>
                     </div>
                 </div>
 
-                <div style="width: 100%; justify-content: center; border: 3px solid red">
-                    @if(exPanel == true)
+                <div style="width: 100%; height: 100%; justify-content: center;">
+                   @switch (currentPanel)
                     {
-                        @if(exercises.Any())
-                        {
-                            @foreach (var ex in exercises)
-                            {
-                                <div style="display: block; text-align: left; gap: 5px; width: 300px; height: fit-content; margin: 10px; background-color: lightslategray; border: 3px solid green">
-                                    <p style="color: white">Name: @ex.Name</p>
-                                    <p style="color: white">Type: @ex.Type</p>
-                                    <p style="color: white">Muscle Group: @ex.MuscleGroup</p>
-                                    <p style="color: white; font-weight: bold;">Description: </p>
-                                    <p style="color: white">@ex.Description</p>
-                                    <button class="btn btn-primary" style="width: 100%; color: white; background-color: darkred" @onclick="() => RemoveExercise(ex)">Remove</button>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <p style="color: white">You don't have any exrcises saved yet</p>
-                        }
-                        <button @onclick="CreateExercise">Add Exerice</button>
-                    }
-
-                    @foreach (var fragment in fragments)
-                    {
-                        @if (creatingEx == true)
-                        {
-                            <div>
-                                @fragment
-                            </div>
-                        }
+                        case PanelType.ManageExercises:
+                            <ManageExercises userId="@userID" />
+                            break;
+                        case PanelType.ManagePrograms:
+                            <ManagePrograms userId="@userID" />
+                            break;
+                        default:
+                            <div>Select an option above to begin</div>
+                            break;
                     }
                 </div>
             </div>
@@ -72,9 +53,17 @@
 @code {
     public string userName = "no name";
     public string userID;
-    public bool creatingEx = false;
 
-    public bool exPanel = false;
+    public enum PanelType
+    {
+        None,
+        NewTraining,
+        ManageExercises,
+        ManagePrograms,
+        History
+    }
+    
+    private PanelType currentPanel = PanelType.None;
 
     public List<Exercise> exercises = new();
     public List<RenderFragment> fragments = new();
@@ -94,42 +83,24 @@
         }
     }
 
-    public void CreateExercise()
-    {
-        RenderFragment f = builder =>
+        /*
+        public void CreateExercise()
         {
+            RenderFragment f = builder =>
+            {
             builder.OpenComponent<NewExercise>(0);
             builder.AddAttribute(1, "UserId", userID);
             builder.AddAttribute(2, "OnExCreated", EventCallback.Factory.Create<Exercise>(this, OnExerciseCreated));
-            builder.CloseComponent();
+        builder.CloseComponent();
         };
-        creatingEx = true;
+        //creatingEx = true;
         fragments.Add(f);
         StateHasChanged();
     }
-
-    public async Task OnExerciseCreated(Exercise ex)
-    {
-        exercises.Add(ex);
-        await workoutService.CreateExerciseAsync(ex);
-        creatingEx = false;
-        StateHasChanged();
-    }
-
-    public async Task RemoveExercise(Exercise ex)
-    {
-        await workoutService.DeleteExerciseAsync(ex.Id, ex.UserId);
-        exercises.Remove(ex);
-        StateHasChanged();
-    }
+    */
 
     public void SignInRedirect()
     {
         navigator.NavigateTo("/singin", forceLoad: true);
-    }
-
-    public void ExPanelDraw()
-    {
-        exPanel = !exPanel;
     }
 }
