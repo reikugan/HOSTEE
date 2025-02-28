@@ -2,6 +2,7 @@
 @using HOSTEE.Services;
 @inject AuthenticationStateProvider  asp
 @inject WorkoutServices workoutService
+@inject IJSRuntime JS
 
 <div style="display:flex; flex-direction: column; width: 100%; height: 100%">
     @if(programs.Any())
@@ -9,45 +10,85 @@
         @foreach(TrainingProgram p in programs)
         {
             <div class="workout-element">
-                <p>Name: @p.Name</p>
-                <p>Description: @p.Description</p>
-                <p>Created: @p.CreatedDate.ToString()</p>
-                <p>Author: @p.UserId</p>
-                <button>Edit</button>
-                <button>Remove</button>
+
+                <div style="display: flex; flex-grow: 1; gap: 15px; align-content: center; white-space: nowrap; overflow: hidden">
+                    <p>Name: @p.Name</p>
+                    <p>Description: @p.Description</p>
+                    <p>Exercises in program: @p.Exercises.Count()</p>                   
+                </div>
+
+                <div style="display: flex; align-content: center; align-items: center; gap: 10px">
+                    <p>Created: @DateOnly.FromDateTime(p.CreatedDate).ToString()</p>
+                    <button class="btn  btn-primary" @onclick="() => ShowModal(p)">Edit</button>
+                    <button class="btn  btn-primary" @onclick="() => RemoveProgram(p.Id, p.UserId)">Remove</button>
+                </div>
             </div>
         }
     }
     else
     {
         <div>
-        <p>You don't have any Training Programs yet!</p>
-        <p>Start by creating one!</p>
-        <button class="btn btn-primary">Create Program</button>
+            <p>You don't have any Training Programs yet!</p>
+            <p>Start by creating one!</p>
         </div>
     }
 
     <div>
-        <button class="btn btn-primary" @onclick="CreateProgram">New Program</button>
+        <button class="btn btn-primary" @onclick="() => ShowModal()">New Program</button>
     </div>
 
-    @if(creating)
-    {
-        <div class="modal-backdrop">
-            <div class="modal">
-                <EditForm Model="@prog" OnValidSubmit="SaveChanges">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+    @if (creating){
+        <div class="modal fade" style="height: fit-content" id="trainingProgramModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create Training Program</h5>
+                        <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body" style="display: flex; flex-direction: column; gap: 5px; padding: 5px 0px">
+                        <EditForm Model="@prog" OnValidSubmit="SaveProgram">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
 
-                    <label>Name:</label>
-                    <InputText class="form-control" @bind-Value="prog.Name" />
+                            <label>Name:</label>
+                            <InputText class="form-control" @bind-Value="prog.Name" />
 
-                    <label>Description:</label>
-                    <InputText class="form-control" @bind-Value="prog.Description" />
+                            <label>Description:</label>
+                            <InputText class="form-control" @bind-Value="prog.Description" />
 
-                    <button type="submit">Save</button>
-                    <button type="button" @onclick="CloseModal">Close</button>
-                </EditForm>
+                            <label>Exercises:</label>
+                            <div style="width:100%; border: 2px solid black; border-radius: 10px; margin-top: 5px">
+                            @foreach (Exercise e in exercises)
+                            {
+                                <div style="display:flex; justify-content:left; width: 100%;">
+                                    <div style="flex-grow: 0; width: 85%; display: flex; justify-content: left; align-items: center; margin: 5px 0px">
+                                        <h6 style="margin: 0;">@e.Name - @e.MuscleGroup</h6>
+                                    </div>
+                                    <div style="flex-grow: 0; width: 15%; display: flex; justify-content: center; align-items: center">
+                                    <button class="btn btn-primary" style="background-color: darkred; color: white; width: 100%; height: 100%" type="button" @onclick="() => RemoveExercise(e)">X</button>
+                                    </div>
+                                </div>
+                            }
+                            </div>
+
+                            <label>Select Exercise:</label>
+                            <select @bind="selectedExId" class="form-select">
+                                <option value="">Select an exercise</option>
+                                @foreach (var e in UsersExercises)
+                                {
+                                    <option value="@e.Id">@e.Name</option>
+                                }
+                            </select>
+                            
+                            <button type="button" @onclick="AddExerciseToProgram" class="btn btn-primary" style="width: 100%;">Add Exercise</button>
+                            <button type="submit" class="btn btn-success" style="width: 100%;">Save</button>
+                                                    
+                        </EditForm>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -57,9 +98,12 @@
 @code {
     [Parameter] public string userId { get; set; }
     public bool creating = false;
-    public List<Exercise> exercises = new();
-    public List<TrainingProgram> programs;
-    public TrainingProgram prog;
+    public List<Exercise> UsersExercises { get; set;} =  new();
+    public List<Exercise> exercises { get; set; } = new();
+    public List<TrainingProgram> programs { get; set; } = new();
+    //public List<ProgramExercise> programExercises { get; set; } = new();
+    public TrainingProgram prog { get; set; } = new();
+    public int? selectedExId;
 
 
     protected override async Task OnInitializedAsync()
@@ -70,24 +114,127 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            //exercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
+            UsersExercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
             programs = (await workoutService.GetUserProgramsAsync(userId)).ToList();
         }
 
     }
 
-    public void CreateProgram()
+    public async Task CreateProgram()
+    {   
+        exercises = new List<Exercise>();
+        creating = true;
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    public async void SaveProgram()
     {
+        Console.WriteLine($"Saving Program: {prog.Name}");
+        if (prog.Id == 0)
+        {
+            prog.UserId = userId;
+            await workoutService.CreateProgramAsync(prog, exercises);
+        }
+        else
+        {
+            List<int> exerciseIds = new();
+            foreach(Exercise e in exercises)
+            {
+                exerciseIds.Add(e.Id);
+            }
+            await workoutService.UpdateProgramAsync(prog, exerciseIds);
+        }
+        UsersExercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
+        programs = (await workoutService.GetUserProgramsAsync(userId)).ToList();
+        await CloseModal();
+        StateHasChanged();
+    }
+
+    private async Task ShowModal(TrainingProgram? p = null)
+    {
+        if(p != null)
+        {
+            prog = new TrainingProgram
+            {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    UserId = p.UserId
+            };
+            exercises = p.Exercises.Select(pe => pe.Exercise).ToList();
+        }
+        else
+        {
+            prog = new TrainingProgram();
+            exercises = new List<Exercise>();
+        }
+
+        creating = true;
+        await Task.Delay(100);
+        StateHasChanged();
+        
+        await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('trainingProgramModal')).show();");
+    }
+
+    public async Task CloseModal()
+    {      
+        await JS.InvokeVoidAsync("eval", @"
+            var modalEl = document.getElementById('trainingProgramModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) 
+            {
+                modalInstance.hide();
+                modalEl.classList.remove('show');
+                document.body.classList.remove('modal-open');
+                var backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }");
+
+        creating = false;
+        prog = new TrainingProgram();
+        await Task.Delay(100);
+        StateHasChanged();   
+    }
+
+
+
+    public void AddExerciseToProgram()
+    {
+        if(selectedExId.HasValue)
+        {
+            Console.WriteLine("selectedExId has Value");
+            var ex = UsersExercises.FirstOrDefault(e => e.Id == selectedExId.Value);
+            if (ex != null)
+            {
+                Console.WriteLine("ex is not null, addint ex to exercises");
+                exercises.Add(ex);
+                UsersExercises.Remove(ex);
+            }
+        }
+    }
+
+    public void RemoveExercise(Exercise ex)
+    {
+        exercises.Remove(ex);
+        UsersExercises.Add(ex);
+    }
+
+    public async Task EditProgram(TrainingProgram p)
+    {
+        prog = p;
         creating = true;
     }
 
-    public async void SaveChanges()
+    public async Task RemoveProgram(int programId, string uid)
     {
-        prog.UserId = userId;
-        await workoutService.CreateProgramAsync(prog, exercises);
-        CloseModal();
+        await workoutService.DeleteProgramAsync(programId, uid);
+        var p = programs.FirstOrDefault(tp => tp.Id == programId && tp.UserId == uid);
+        if(p != null)
+        {
+            Console.WriteLine("Removing program");
+            programs.Remove(p);
+        }
+        StateHasChanged();
     }
-
-    void CloseModal() => creating = false;
-
 }

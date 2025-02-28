@@ -140,11 +140,13 @@ namespace HOSTEE.Services
             if (training.TrainingProgramId.HasValue)
             {
                 var program = await _context.TrainingPrograms.FirstOrDefaultAsync(tp => tp.Id == training.TrainingProgramId && tp.UserId == training.UserId);
+                training.TrainingProgram = program;
             }
 
             _context.TrainingSessions.Add(training);
+            await _context.SaveChangesAsync();
 
-            foreach(var ex in exercises)
+            foreach (var ex in exercises)
             {
                 ex.TrainingId = training.Id;
                 _context.TrainingExercises.Add(ex);

@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Blazored.Modal;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,8 @@ builder.Services.AddHttpClient("ServerAPI", client =>
 {
     client.BaseAddress = new Uri("/");
 });
+builder.Services.AddBlazoredModal();
+
 
 //CHATBOT
 builder.Services.AddScoped<ChatBotService>();

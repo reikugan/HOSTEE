@@ -1,0 +1,202 @@
+﻿@using System.Security.Claims
+@using HOSTEE.Services
+@inject AuthenticationStateProvider asp
+@inject WorkoutServices workoutService
+
+
+@if(session)
+{
+    <div style="width: 98%; height: 100%; overflow: auto; display: flex; justify-content: center; color: white; background-color: black; margin: 15px">
+        <EditForm Model="@training" OnValidSubmit="SaveTraining" style="width: 60%; display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px;">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @if (progId != 0)
+            {
+                <h1>@prog.Name</h1>
+                <p>@prog.Description</p>
+            }
+            else
+            {
+                <h3>Custom training session</h3>       
+            }
+
+            @foreach (var te in trainingExercises)
+            {
+                <div style="display: flex; flex-direction: column; width: 100%; background-color: darkcyan; padding: 15px; gap: 10px; border-radius: 5px;">
+
+                    <div>
+                        <h3>@te.Exercise.Name</h3>
+                        <p>@te.Exercise.Description</p>
+                    </div>
+
+
+                    <div style="display: flex; flex-direction: column; width: 100%; gap: 10px;">
+
+                        <div class="training-ex-column">
+                            <label>Sets</label>
+                            <InputNumber class="form-control" @bind-Value="te.Sets"></InputNumber>
+                        </div>
+
+                        <div class="training-ex-column">
+                            <label>Repetitions</label>
+                            <InputNumber class="form-control" @bind-Value="te.Reps"></InputNumber>
+                        </div>
+
+                        <div class="training-ex-column">
+                            <label>Weight used</label>
+                            <InputNumber class="form-control" @bind-Value="te.Weight"></InputNumber>
+                        </div>
+
+                        <div class="training-ex-column" style="align-items: center">
+                            <label>Completed</label>
+                            <InputCheckbox @bind-Value="te.Completed"></InputCheckbox>
+                        </div>
+                    </div>
+
+
+                    <div style="width: 100%; margin-top: 10px; display: flex; flex-direction: column;">
+                        <label>Comments</label>
+                        <InputText class="form-control" @bind-Value="te.Comments"></InputText>
+                    </div>
+
+                    @if (progId == 0)
+                    {
+                        <div style="width: 100%; margin-top: 10px;">
+                            <button type="button" class="btn btn-primary" @onclick="() => RemoveExercise(te)">Remove</button>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if(progId == 0)
+            {
+                <select @bind="exerciseId" class="form-select">
+                    <option value="0">Select an Exercise to add</option>
+                    @foreach (var ue in UsersExercises)
+                    {
+                        <option value="@ue.Id">@ue.Name</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-primary" @onclick="AddExercise">Add Exercise</button>
+            }
+            <div style="margin-top: 20px; display: flex; justify-content: end; gap: 10px;">
+                <button type="submit" class="btn btn-success">Save and close</button>
+                <button type="button" class="btn btn-primary" @onclick="CloseTraining">Close without saving</button>
+            </div>
+        </EditForm>
+    </div>
+
+}
+else
+{
+    <div style="width: 100%; color: white; display: flex; flex-direction: column; align-items: center;">
+        <p>Select a Training program from a list, or just click 'Start Training', to create sustom training session</p>
+        <select @bind="progId" class="form-select" style="width: auto">
+            <option value="0">Select a Training program</option>
+            @foreach (var p in programs)
+            {
+                <option value="@p.Id">@p.Name</option>
+            }
+        </select>
+        <button class="btn btn-primary" style="margin: 20px" @onclick="StartTraining">Start Training</button>
+    </div>
+}
+
+@code {
+    [Parameter] public string userId { get; set; }
+    public bool session = false;
+    public Training training { get; set; } = new();
+    public List<TrainingExercise> trainingExercises { get; set; } = new();
+    public List<TrainingProgram> programs { get; set; } = new();
+    public List<Exercise> UsersExercises { get; set; } = new();
+    public Exercise exercise { get; set; } = new();
+    public int exerciseId { get; set; } = 0;
+    public TrainingProgram prog { get; set; } = new();
+    public int progId { get; set; } = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await asp.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            programs = (await workoutService.GetUserProgramsAsync(userId)).ToList();
+            UsersExercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
+        }
+
+    }
+
+    public void StartTraining()
+    {       
+        prog = programs.FirstOrDefault(p => p.Id == progId);
+
+        if(prog == null)
+        {
+            trainingExercises = new();
+        }
+        else
+        {
+            trainingExercises = prog.Exercises
+                .Select(pe => new TrainingExercise
+                    {
+                        ExerciseId = pe.Exercise.Id,
+                        Exercise = pe.Exercise
+                    })
+                .ToList();
+        }
+
+        session = true;
+    }
+
+    public async Task SaveTraining()
+    {
+        training.UserId = userId;
+
+        if(prog.Id != 0 && prog != null)
+        {
+            training.TrainingProgramId = prog.Id;
+        }
+
+        await workoutService.SaveTrainingAsync(training, trainingExercises);
+        session = false;
+        StateHasChanged();
+    }
+
+    public void AddExercise()
+    {
+        Exercise ex = UsersExercises.FirstOrDefault(e => e.Id == exerciseId);
+        if(exerciseId != 0 && ex != null)
+        {
+            Console.WriteLine("Adding exercise to trainingExercises");
+            trainingExercises.Add(new TrainingExercise
+            {
+                Exercise = ex,
+                ExerciseId = ex.Id
+            });
+            UsersExercises.Remove(ex);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("AddExercise fail: exerciseId is 0 or ex is null");
+        }
+    }
+
+    public void RemoveExercise(TrainingExercise tex)
+    {
+        UsersExercises.Add(tex.Exercise);
+        trainingExercises.Remove(tex);
+        StateHasChanged();
+    }
+
+    public void CloseTraining()
+    {
+        training = new();
+        session = false;
+        StateHasChanged();
+    }
+}
