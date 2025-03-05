@@ -22,7 +22,7 @@
                         <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.ManagePrograms">Your training programs</button>
                     </div>
                     <div class="col">
-                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.History">History and progression</button>
+                        <button class="workout-panel-button" @onclick="() => currentPanel = PanelType.ManageStatistics">History and progression</button>
                     </div>
                 </div>
 
@@ -38,8 +38,11 @@
                         case PanelType.NewTraining:
                             <ManageTraining userId="@userID"/>
                             break;
+                        case PanelType.ManageStatistics:
+                            <ManageStatistics userId="@userID"/>
+                            break;
                         default:
-                            <div>Select an option above to begin</div>
+                            <div style="color: white">Select an option above to begin</div>
                             break;
                     }
                 </div>
@@ -63,7 +66,7 @@
         NewTraining,
         ManageExercises,
         ManagePrograms,
-        History
+        ManageStatistics
     }
     
     private PanelType currentPanel = PanelType.None;

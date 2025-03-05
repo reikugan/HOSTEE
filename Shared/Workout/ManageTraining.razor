@@ -6,8 +6,8 @@
 
 @if(session)
 {
-    <div style="width: 98%; height: 100%; overflow: auto; display: flex; justify-content: center; color: white; background-color: black; margin: 15px">
-        <EditForm Model="@training" OnValidSubmit="SaveTraining" style="width: 60%; display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px;">
+    <div style="width: 98%; height: calc(100vh - 30px); overflow-y: auto; display: flex; justify-content: center; color: white; background-color: black; margin: 15px">
+        <EditForm Model="@training" OnValidSubmit="SaveTraining" style="width: 60%; display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; overflow-y: auto; max-height: 80vh;">
             <DataAnnotationsValidator />
             <ValidationSummary />
 

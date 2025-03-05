@@ -12,7 +12,7 @@
         public int Reps { get; set; }
         public double Weight { get; set; }
         public Boolean Completed { get; set; }
-        public string Comments { get; set; }
+        public string Comments { get; set; } = string.Empty;
 
     }
 }

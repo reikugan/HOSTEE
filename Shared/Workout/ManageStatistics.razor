@@ -1,0 +1,120 @@
+﻿@using System.Security.Claims;
+@using HOSTEE.Services;
+@using Syncfusion.Blazor.Charts;
+@inject AuthenticationStateProvider asp
+@inject WorkoutServices workoutService
+
+<div style="display: flex; justify-content: center; width: 100%">
+
+    <div style="width: 50%">
+        @if(trainings.Any())
+        {
+            @foreach (Training t in trainings)
+            {
+                <div class="workout-element">
+                    <p>Training date: @t.Date</p>
+
+                    @if(t.TrainingProgramId.HasValue && t.TrainingProgram != null)
+                    {
+                        <p>Training Program: @t.TrainingProgram.Name</p>
+                    }
+                    else 
+                    {
+                        <p>Custom training session</p>
+                    }
+                </div>
+            }
+        } <!--line 27-->
+    </div>
+
+
+    <div style="display: block; justify-content: center; width: 50%">
+
+        <div style="display: flex; justify-content: center; gap: 10px">
+            <select @bind="exerciseId" class="form-select">
+                <option value="0">Select an Exercise</option>
+                @foreach (var ue in UsersExercises)
+                {
+                    <option value="@ue.Id">@ue.Name</option>
+                }
+            </select>
+            <button type="button" class="btn btn-primary" @onclick="() => BuildGraph(exerciseId)">Show statistics</button>
+        </div>
+        <div>
+            @if (showgraph && trainingdata.Any())
+            {
+                <SfChart>
+                    <ChartPrimaryXAxis ValueType ="Syncfusion.Blazor.Charts.ValueType.DateTime"></ChartPrimaryXAxis>
+                    <ChartSeriesCollection>
+                        <ChartSeries DataSource="@trainingdata"
+                        XName="date"
+                        YName="weight"
+                        Type="ChartSeriesType.Line">
+                        </ChartSeries>
+                    </ChartSeriesCollection>
+                </SfChart>
+            }
+            else if(showgraph)
+            {
+                <p>No data for selected exercise</p>
+            }
+        </div>
+
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public string userId { get; set; }
+    public Training training { get; set; } = new();
+    public List<TrainingExercise> trainingExercises { get; set; } = new();
+    public List<TrainingProgram> programs { get; set; } = new();
+    public List<Exercise> UsersExercises { get; set; } = new();
+    public Exercise exercise { get; set; } = new();
+    public int exerciseId { get; set; } = 0;
+    public TrainingProgram prog { get; set; } = new();
+
+
+    public List<Training> trainings { get; set; } = new();
+    public List<TrainingData> trainingdata { get; set; } = new();
+    public bool showgraph = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await asp.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //programs = (await workoutService.GetUserProgramsAsync(userId)).ToList();
+            UsersExercises = (await workoutService.GetUserExercisesAsync(userId)).ToList();
+            trainings = (await workoutService.GetUserTrainingSessionsAsync(userId)).ToList();
+        }
+
+    }
+
+    public async Task BuildGraph(int exId)
+    {
+        var ex = UsersExercises.FirstOrDefault(e => e.Id == exId);
+        if (ex != null)
+        {
+            trainingdata.Clear();
+            trainingExercises = (await workoutService.GetCompletedExercisesAsync(ex.Id, userId)).ToList();
+
+            if (trainingExercises.Any())
+            {
+                foreach (TrainingExercise te in trainingExercises)
+                {
+                    var tdata = new TrainingData { date = DateOnly.FromDateTime(te.Training.Date), weight = te.Weight };
+                    trainingdata.Add(tdata);
+                }
+            }
+
+            showgraph = true;
+            StateHasChanged();
+        }
+    }
+
+}

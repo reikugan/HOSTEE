@@ -143,6 +143,7 @@ namespace HOSTEE.Services
                 training.TrainingProgram = program;
             }
 
+            training.Id = 0;
             _context.TrainingSessions.Add(training);
             await _context.SaveChangesAsync();
 
@@ -161,7 +162,7 @@ namespace HOSTEE.Services
                 .Include(t => t.Exercises)
                 .ToListAsync();
 
-            if( trainings.Any())
+            if(trainings.Any())
             {
                 return trainings;
             }
@@ -177,15 +178,8 @@ namespace HOSTEE.Services
                 .Where(te => te.Training.UserId == userId && te.ExerciseId == exerciseId)
                 .Include(te => te.Training)
                 .ToListAsync();
-            
-            if (ex.Any())
-            {
-                return ex;
-            }
-            else
-            {
-                throw new Exception($"No data found for {userId} with exercise {exerciseId}");
-            }
+
+            return ex;
         }
 
 
